@@ -1,15 +1,19 @@
 package com.highlevel.flutter_twilio_voice.flutter_twilio_voice
 
+import android.Manifest
+import android.app.Activity
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Context.POWER_SERVICE
+import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.os.PowerManager
 import android.util.Log
 import android.widget.Toast
-import androidx.annotation.NonNull;
-
+import androidx.annotation.NonNull
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -18,6 +22,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry.Registrar
+import java.util.*
 
 /** FlutterTwilioVoicePlugin */
 public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
@@ -29,11 +34,17 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
     private var _field = 0x00000020
     private lateinit var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
     private lateinit var twilioManager: TwilioManager
+    private val PERMISSION_REQUEST_CODE = 1
+
+    var appPermission = arrayOf(
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.CAMERA)
+
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         this.flutterPluginBinding = flutterPluginBinding
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_twilio_voice")
-        channel.setMethodCallHandler(this);
-
+        channel.setMethodCallHandler(this)
     }
 
     companion object {
@@ -45,6 +56,23 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
             Log.e("FlutterTwili", "register with")
         }
     }
+
+    fun checkAndRequestPermission(activity: Activity) {
+        val listPermissionNeeded: MutableList<String> = ArrayList()
+        for (perm in appPermission) {
+            if (ContextCompat.checkSelfPermission(activity, perm) != PackageManager.PERMISSION_GRANTED) {
+                listPermissionNeeded.add(perm)
+            }
+        }
+        if (listPermissionNeeded.isNotEmpty()) {
+            ActivityCompat.requestPermissions(
+                    activity,
+                    listPermissionNeeded.toTypedArray(),
+                    PERMISSION_REQUEST_CODE
+            )
+        }
+    }
+
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         Log.e("FlutterTwili", "method call ${call.arguments} ${call.method}")
@@ -92,6 +120,8 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         Log.e("FlutterTwili", "onAttachedToActivity")
+        checkAndRequestPermission(binding.activity)
+
         try {
             _field = PowerManager::class.java.javaClass.getField("PROXIMITY_SCREEN_OFF_WAKE_LOCK").getInt(null)
         } catch (e: Exception) {

@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_twilio_voice/models/call.dart';
+import 'package:meta/meta.dart';
 
 class FlutterTwilioVoice {
   static const MethodChannel _channel =
@@ -22,7 +24,16 @@ class FlutterTwilioVoice {
     _listenToMethodCalls();
   }
 
-  void call() async {}
+  Future call({@required Call call}) async {
+    var result = await _channel.invokeMethod("call", {
+      "to": call.to,
+      "accessToken": call.accessToken,
+      "name": call.name,
+      "locationId": call.locationId,
+      "callerId": call.callerId,
+    });
+    return result;
+  }
 
   Future<bool> hold() async {}
 
