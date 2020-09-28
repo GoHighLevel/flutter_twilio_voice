@@ -15,8 +15,15 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import io.flutter.plugin.common.MethodChannel
 
-class TwilioManager(context: Context, activity: Activity, powerManager: PowerManager, wakeLock: PowerManager.WakeLock, audioManager: AudioManager, notificationManager: NotificationManager) {
+class TwilioManager(context: Context,
+                    activity: Activity,
+                    powerManager: PowerManager,
+                    wakeLock: PowerManager.WakeLock,
+                    audioManager: AudioManager,
+                    notificationManager: NotificationManager,
+                    channel: MethodChannel) {
 
     private val TAG = "VoiceActivity"
 
@@ -30,13 +37,13 @@ class TwilioManager(context: Context, activity: Activity, powerManager: PowerMan
     private val CHANNEL_ID: String = "$TAG/NOTIFICATION_CHANNEL_ID";
     private var isShowingNotification: Boolean = false
     private val _activity: Activity = activity
-    lateinit var twilioAndroid: TwilioAndroid
+    private lateinit var twilioAndroid: TwilioAndroid
+
 
     init {
         createNotificationChannel()
-        registerPlatformChannels()
         checkAndRequestPermission()
-        twilioAndroid = TwilioAndroid(_context, _wakeLock, _audioManager, createNotificationChannel = { createNotificationChannel()},cancelNotification = { cancelNotification()})
+        twilioAndroid = TwilioAndroid(_context, _wakeLock, _audioManager,channel, createNotificationChannel = { createNotificationChannel() }, cancelNotification = { cancelNotification() })
 
     }
 
@@ -57,9 +64,6 @@ class TwilioManager(context: Context, activity: Activity, powerManager: PowerMan
         }
     }
 
-    private fun registerPlatformChannels() {
-
-    }
 
     private fun checkAndRequestPermission() {
         val listPermissionNeeded: ArrayList<String> = ArrayList()
@@ -98,4 +102,28 @@ class TwilioManager(context: Context, activity: Activity, powerManager: PowerMan
         isShowingNotification = true
     }
 
+    fun startCall(name: String, accessToken: String, toUser: String, locationId: String, callerId: String) {
+        buildCallNotification(name)
+        twilioAndroid.invokeCall(accessToken, toUser, locationId, callerId)
+    }
+
+    fun toggleHold(): Boolean {
+        return twilioAndroid.hold()
+    }
+
+    fun toggleSpeaker(speaker: Boolean): Boolean {
+        return twilioAndroid.speaker(speaker)
+    }
+
+    fun toggleMute(): Boolean {
+        return twilioAndroid.mute()
+    }
+
+    fun disconnectCall() {
+        twilioAndroid.disconnect()
+    }
+
+    fun keyPress(digit: String) {
+        twilioAndroid.keyPress(digit)
+    }
 }

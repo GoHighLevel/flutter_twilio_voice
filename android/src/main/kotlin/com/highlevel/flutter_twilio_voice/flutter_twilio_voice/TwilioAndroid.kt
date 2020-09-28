@@ -9,10 +9,12 @@ import android.os.Build
 import android.os.PowerManager
 import android.util.Log
 import com.twilio.voice.*
+import io.flutter.plugin.common.MethodChannel
 
 class TwilioAndroid(context: Context,
                     wakeLock: PowerManager.WakeLock,
                     audioManager: AudioManager,
+                    channel: MethodChannel,
                     val createNotificationChannel: () -> Unit,
                     val cancelNotification: () -> Unit) {
     private val TAG = "FlutterTwilio"
@@ -29,29 +31,31 @@ class TwilioAndroid(context: Context,
     private var isShowingNotification: Boolean = false;
     private val _context: Context = context
     var notificationId: Int = 123
-
+    val _channel: MethodChannel = channel
 
     fun callListener(): Call.Listener {
-
         return object : Call.Listener {
-            override fun onConnectFailure(call: Call, callException: CallException) {
-                Log.e(TAG, "on Connect Failure")
-                setAudioFocus(false)
-                stopWakeLock();
-                val message: String = String.format("Call Error:%d, %s", callException.errorCode, callException.message)
-                cancelNotification()
-                val args = HashMap<String, String>()
-                args.put("status", "connect_failure")
-                //TODO:: send args to channel
-
-            }
 
             override fun onRinging(call: Call) {
                 Log.e(TAG, "on Ringing")
                 val args = HashMap<String, String>()
                 args.put("status", "ringing")
-                //TODO:: send args to channel
+                _channel.invokeMethod("call_listener", args)
             }
+
+            override fun onConnectFailure(call: Call, callException: CallException) {
+                Log.e(TAG, "on Connect Failure")
+                setAudioFocus(false)
+                stopWakeLock();
+                val message: String = String.format("Call Error:%d, %s", callException.errorCode, callException.message)
+                Log.e(TAG, message)
+                cancelNotification()
+                val args = HashMap<String, String>()
+                args.put("status", "connect_failure")
+
+                _channel.invokeMethod("call_listener", args)
+            }
+
 
             override fun onConnected(call: Call) {
                 Log.e(TAG, "on Connected")
@@ -59,12 +63,13 @@ class TwilioAndroid(context: Context,
                 activeCall = call
                 val callSid: String? = call.sid
                 val callFrom: String? = call.from
+                Log.e(TAG, "Connnected from: $callFrom")
+
                 val args: HashMap<String, String> = HashMap<String, String>()
                 args.put("status", "connected");
                 args.put("sid", callSid!!)
                 args.put("from", callFrom!!)
-
-                //TODO:: send args to channel
+                _channel.invokeMethod("call_listener", args)
             }
 
             override fun onReconnecting(call: Call, callException: CallException) {
@@ -85,9 +90,8 @@ class TwilioAndroid(context: Context,
                 }
                 cancelNotification()
                 val args: HashMap<String, String> = HashMap<String, String>()
-
                 args.put("status", "disconnected")
-                //TODO:: send args to channel
+                _channel.invokeMethod("call_listener", args)
             }
 
         }
@@ -153,6 +157,7 @@ class TwilioAndroid(context: Context,
         if (activeCall != null) {
             val hold: Boolean = !activeCall!!.isOnHold
             activeCall!!.hold(hold)
+
             return activeCall!!.isOnHold
         }
         return false
@@ -173,9 +178,12 @@ class TwilioAndroid(context: Context,
         } catch (e: Exception) {
             Log.e(TAG, "speaker: ", e)
         }
-        return  _audioManager.isSpeakerphoneOn
+        return _audioManager.isSpeakerphoneOn
     }
-    fun keyPress(){
-        
+
+    fun keyPress(digit: String) {
+        if (activeCall != null) {
+            activeCall!!.sendDigits(digit)
+        }
     }
 }

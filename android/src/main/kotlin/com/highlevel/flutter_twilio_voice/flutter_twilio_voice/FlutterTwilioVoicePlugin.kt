@@ -34,11 +34,9 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_twilio_voice")
         channel.setMethodCallHandler(this);
 
-
     }
 
     companion object {
-
         @JvmStatic
         fun registerWith(registrar: Registrar) {
             Toast.makeText(registrar.activeContext(), "Hello", Toast.LENGTH_LONG).show();
@@ -53,10 +51,32 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
         when (call.method) {
             "call" -> {
                 Log.e("FlutterTwili", "call")
-                twilioManager.buildCallNotification(call.argument<String>("name") as String)
+                twilioManager.startCall(call.argument<String>("name") as String,
+                        call.argument<String>("accessToken") as String,
+                        call.argument<String>("to") as String,
+                        call.argument<String>("locationId") as String,
+                        call.argument<String>("callerId") as String)
+
             }
             "hold" -> {
                 Log.e("FlutterTwili", "hold")
+                result.success(twilioManager.toggleHold())
+            }
+            "speaker" -> {
+                Log.e("FlutterTwili", "speaker")
+                result.success(twilioManager.toggleSpeaker(call.argument<Boolean>("speaker") as Boolean))
+            }
+            "mute" -> {
+                Log.e("FlutterTwili", "mute")
+                result.success(twilioManager.toggleMute())
+            }
+            "keyPress" -> {
+                Log.e("FlutterTwili", "keyPress")
+                twilioManager.keyPress(call.argument<String>("digit") as String)
+            }
+            "disconnect" -> {
+                Log.e("FlutterTwili", "disconnect")
+                twilioManager.disconnectCall()
             }
             else -> {
                 Log.e("FlutterTwili", "something else ${call.method}")
@@ -71,7 +91,6 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-//        TODO("Not yet implemented")
         Log.e("FlutterTwili", "onAttachedToActivity")
         try {
             _field = PowerManager::class.java.javaClass.getField("PROXIMITY_SCREEN_OFF_WAKE_LOCK").getInt(null)
@@ -83,7 +102,8 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
                 audioManager = (binding.activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager?)!!,
                 powerManager = (binding.activity.getSystemService(POWER_SERVICE) as PowerManager?)!!,
                 wakeLock = (binding.activity.getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(_field, binding.activity.localClassName),
-                notificationManager = (binding.activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
+                notificationManager = (binding.activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager),
+                channel = channel
         )
         binding.activity.volumeControlStream = AudioManager.STREAM_VOICE_CALL
 
