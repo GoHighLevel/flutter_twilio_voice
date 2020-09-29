@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_twilio_voice/constants/method_channel_methods.dart';
+import 'package:flutter_twilio_voice/exceptions/twilio_call_exceptions.dart';
 import 'package:flutter_twilio_voice/models/call.dart';
 import 'package:meta/meta.dart';
 
@@ -13,37 +15,106 @@ class FlutterTwilioVoice {
       onHold = false,
       onSpeaker = true,
       onMute = false;
-  String accessToken, keyPressed = '';
+
+  Function onConnected;
+  Function onDisconnected;
+  Function onPermissionDenied;
+  Function onConnectFailure;
 
   static Future<String> get platformVersion async {
     final String version = await _channel.invokeMethod('getPlatformVersion');
     return version;
   }
 
-  FlutterTwilioVoice() {
+  FlutterTwilioVoice({
+    @required this.onConnected,
+    @required this.onPermissionDenied,
+    @required this.onConnectFailure,
+  }) {
     _listenToMethodCalls();
   }
 
-  Future call({@required Call call}) async {
-    var result = await _channel.invokeMethod("call", {
+  Future<void> call({@required Call call}) async {
+    Completer<void> completer = Completer();
+
+    _channel.invokeMethod(MethodChannelMethods.CALL, {
       "to": call.to,
       "accessToken": call.accessToken,
       "name": call.name,
       "locationId": call.locationId,
       "callerId": call.callerId,
+    }).then((value) {
+      completer.complete();
+    }, onError: (e) {
+      throw TwilioCallException(
+        error: e,
+      );
     });
-    return result;
+    return completer.future;
   }
 
-  Future<bool> hold() async {}
+  Future<bool> hold() async {
+    Completer<bool> completer = Completer();
+    _channel
+        .invokeMethod(MethodChannelMethods.HOLD)
+        .then((result) => completer.complete(result))
+        .catchError((e) {
+      throw TwilioCallException(
+        error: e,
+      );
+    });
 
-  Future<bool> speaker() async {}
+    return completer.future;
+  }
 
-  Future<bool> mute() async {}
+  Future<bool> speaker(bool speaker) async {
+    Completer<bool> completer = Completer();
+    _channel
+        .invokeMethod(
+            MethodChannelMethods.SPEAKER, {'speaker': speaker ?? false})
+        .then((result) => completer.complete(result))
+        .catchError((e) {
+          throw TwilioCallException(
+            error: e,
+          );
+        });
 
-  void keyPress() {}
+    return completer.future;
+  }
 
-  void disconnect() {}
+  Future<bool> mute() async {
+    Completer<bool> completer = Completer();
+    _channel
+        .invokeMethod(MethodChannelMethods.MUTE)
+        .then((result) => completer.complete(result))
+        .catchError((e) {});
+
+    return completer.future;
+  }
+
+  Future<void> keyPress({@required String keyValue}) {
+    Completer<void> completer = Completer();
+    _channel
+        .invokeMethod(MethodChannelMethods.KEY_PRESS, {'digit': keyValue})
+        .then((result) => completer.complete())
+        .catchError((e) {
+          throw e;
+        });
+
+    return completer.future;
+  }
+
+  Future<void> disconnect() {
+    Completer<void> completer = Completer();
+    _channel
+        .invokeMethod(MethodChannelMethods.MUTE)
+        .then((result) => completer.complete())
+        .catchError((e) {
+      throw e;
+    });
+
+    return completer.future;
+  }
 
   void _listenToMethodCalls() {
     _channel.setMethodCallHandler((MethodCall call) async {
@@ -55,19 +126,19 @@ class FlutterTwilioVoice {
             isCalling = isRinging = true;
             break;
           case "permission_denied":
+            onPermissionDenied();
+            break;
           case "disconnected":
+            onDisconnected();
+            break;
           case "connect_failure":
             isConnected = false;
             isCalling = isRinging = false;
-            // Navigator.of(context).pop(status == "permission_denied"
-            //     ? "Permisssions denied"
-            //     : status == "disconnected"
-            //         ? "Call Disconnected"
-            //         : "Connection failure");
+            onConnectFailure();
             break;
           case "connected":
             isConnected = true;
-            // _sendOutBoundMessage(call.arguments['sid'], call.arguments['from']);
+            onConnected();
             break;
         }
       }
