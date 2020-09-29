@@ -19,7 +19,6 @@ class TwilioAndroid(context: Context,
                     val cancelNotification: () -> Unit) {
     private val TAG = "FlutterTwilio"
 
-    private val PERMISSION_REQUEST_CODE = 1
     private val _audioManager: AudioManager = audioManager
 
     private var savedAudioMode = AudioManager.MODE_INVALID
