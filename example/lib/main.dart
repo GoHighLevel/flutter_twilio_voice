@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
-import 'package:flutter/services.dart';
-import 'package:flutter_twilio_voice/flutter_twilio_voice.dart';
-
 void main() {
   runApp(MyApp());
 }
@@ -24,13 +21,20 @@ class _MyAppState extends State<MyApp> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
+    // FlutterTwilioVoice flutterTwilioVoice = FlutterTwilioVoice(onConnected: () {
+    //   print('cinn');
+    // }, onConnectFailure: () {
+    //   print('cinnaa');
+    // }, onPermissionDenied: () {
+    //   print('cinnsas');
+    // });
     String platformVersion;
     // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      platformVersion = await FlutterTwilioVoice.platformVersion;
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
+    // try {
+    //   // platformVersion = await FlutterTwilioVoice.platformVersion;
+    // } on PlatformException {
+    //   platformVersion = 'Failed to get platform version.';
+    // }
 
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
