@@ -21,6 +21,7 @@ class FlutterTwilioVoice {
   Function onDisconnected;
   Function onPermissionDenied;
   Function onConnectFailure;
+  Function onRinging;
   String defaultIcon;
 
   static Future<String> get platformVersion async {
@@ -34,6 +35,8 @@ class FlutterTwilioVoice {
     @required this.onConnected,
     @required this.onPermissionDenied,
     @required this.onConnectFailure,
+    @required this.onDisconnected,
+    @required this.onRinging,
   }) {
     _listenToMethodCalls();
   }
@@ -166,6 +169,7 @@ class FlutterTwilioVoice {
         switch (status) {
           case "ringing":
             isCalling = isRinging = true;
+            onRinging();
             break;
           case "permission_denied":
             onPermissionDenied();

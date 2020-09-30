@@ -56,7 +56,8 @@ class TwilioManager(context: Context,
     }
 
     fun cancelNotification() {
-        if (!isShowingNotification) {
+        Log.e(TAG,"Canceling notification")
+        if (isShowingNotification) {
             val notificationManager: NotificationManagerCompat = NotificationManagerCompat.from(_context)
             notificationManager.cancel(notificationId)
             isShowingNotification = false

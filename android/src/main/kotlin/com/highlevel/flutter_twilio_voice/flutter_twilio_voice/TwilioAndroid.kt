@@ -88,6 +88,8 @@ class TwilioAndroid(context: Context,
                 if (callException != null) {
                     val message: String = String.format("Call Error: %d %s", callException.errorCode, callException.message)
                 }
+                Log.e(TAG, "Cancel notification called")
+
                 cancelNotification()
                 val args: HashMap<String, String> = HashMap<String, String>()
                 args.put("status", "disconnected")
