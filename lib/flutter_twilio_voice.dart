@@ -1,12 +1,14 @@
-import 'dart:async';
+import 'dart:async' show Completer;
+import 'dart:collection' show HashMap;
 
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart'
+    show PlatformException, MethodChannel, MethodCall;
 import 'package:flutter_twilio_voice/constants/method_channel_methods.dart';
 import 'package:flutter_twilio_voice/exceptions/twilio_call_exceptions.dart';
 import 'package:flutter_twilio_voice/models/call.dart';
-import 'package:meta/meta.dart';
+import 'package:meta/meta.dart' show required;
 
-class   FlutterTwilioVoice {
+class FlutterTwilioVoice {
   static const MethodChannel _channel =
       const MethodChannel('flutter_twilio_voice');
   bool isCalling = false,
@@ -15,40 +17,42 @@ class   FlutterTwilioVoice {
       onHold = false,
       onSpeaker = true,
       onMute = false;
-  
-  Function onConnected;
-  Function onDisconnected;
-  Function onPermissionDenied;
-  Function onConnectFailure;
 
-  static Future<String> get platformVersion async {
-    final String version = await _channel.invokeMethod('getPlatformVersion');
-    return version;
-  }
+  final Function onConnected;
+  final Function onDisconnected;
+  final Function onPermissionDenied;
+  final Function onConnectFailure;
+  final Function onRinging;
+  final String defaultIcon;
 
   FlutterTwilioVoice({
+    @required this.defaultIcon,
     @required this.onConnected,
     @required this.onPermissionDenied,
     @required this.onConnectFailure,
+    @required this.onDisconnected,
+    @required this.onRinging,
   }) {
     _listenToMethodCalls();
   }
 
-  Future<void> call({@required Call call}) async {
+  Future<void> connectCall({@required Call call}) async {
     Completer<void> completer = Completer();
 
     _channel.invokeMethod(MethodChannelMethods.CALL, {
-      "to": call.to,
-      "accessToken": call.accessToken,
-      "name": call.name,
-      "locationId": call.locationId,
-      "callerId": call.callerId,
+      'to': call.to,
+      'accessToken': call.accessToken,
+      'name': call.name,
+      'locationId': call.locationId,
+      'callerId': call.callerId,
+      'icon': defaultIcon
     }).then((value) {
       completer.complete();
-    }, onError: (PlatformException e) {
-      throw TwilioCallException(
-        error: e.message,
-      );
+    }, onError: (Object e) {
+      if (e is PlatformException)
+        throw TwilioCallException(error: e.message);
+      else
+        throw e;
     });
     return completer.future;
   }
@@ -58,12 +62,12 @@ class   FlutterTwilioVoice {
     _channel
         .invokeMethod(MethodChannelMethods.HOLD)
         .then((result) => completer.complete(result))
-        .catchError((PlatformException e) {
-      throw TwilioCallException(
-        error: e.message,
-      );
+        .catchError((Object e) {
+      if (e is PlatformException)
+        throw TwilioCallException(error: e.message);
+      else
+        throw e;
     });
-
     return completer.future;
   }
 
@@ -73,10 +77,11 @@ class   FlutterTwilioVoice {
         .invokeMethod(
             MethodChannelMethods.SPEAKER, {'speaker': speaker ?? false})
         .then((result) => completer.complete(result))
-        .catchError((PlatformException e) {
-          throw TwilioCallException(
-            error: e.message,
-          );
+        .catchError((Object e) {
+          if (e is PlatformException)
+            throw TwilioCallException(error: e.message);
+          else
+            throw e;
         });
 
     return completer.future;
@@ -87,34 +92,41 @@ class   FlutterTwilioVoice {
     _channel
         .invokeMethod(MethodChannelMethods.MUTE)
         .then((result) => completer.complete(result))
-        .catchError((PlatformException e) {});
+        .catchError((Object e) {
+      if (e is PlatformException)
+        throw TwilioCallException(error: e.message);
+      else
+        throw e;
+    });
 
     return completer.future;
   }
 
-  Future<void> keyPress({@required String keyValue}) {
+  Future<void> pressKey({@required String keyValue}) {
     Completer<void> completer = Completer();
     _channel
         .invokeMethod(MethodChannelMethods.KEY_PRESS, {'digit': keyValue})
         .then((result) => completer.complete())
-        .catchError((PlatformException e) {
-          throw TwilioCallException(
-            error: e.message
-          );
+        .catchError((Object e) {
+          if (e is PlatformException)
+            throw TwilioCallException(error: e.message);
+          else
+            throw e;
         });
 
     return completer.future;
   }
 
-  Future<void> disconnect() {
+  Future<void> disconnectCall() {
     Completer<void> completer = Completer();
     _channel
-        .invokeMethod(MethodChannelMethods.MUTE)
+        .invokeMethod(MethodChannelMethods.DISCONNECT)
         .then((result) => completer.complete())
-        .catchError((PlatformException e) {
-      throw TwilioCallException(
-        error: e.message
-      );
+        .catchError((Object e) {
+      if (e is PlatformException)
+        throw TwilioCallException(error: e.message);
+      else
+        throw e;
     });
 
     return completer.future;
@@ -122,27 +134,39 @@ class   FlutterTwilioVoice {
 
   void _listenToMethodCalls() {
     _channel.setMethodCallHandler((MethodCall call) async {
-      if (call.method == "call_listener") {
+      if (call.method == 'call_listener') {
         String status = call.arguments['status'];
-        print('status: $status');
         switch (status) {
-          case "ringing":
+          case 'ringing':
             isCalling = isRinging = true;
+            onRinging();
             break;
-          case "permission_denied":
+          case 'permission_denied':
             onPermissionDenied();
             break;
-          case "disconnected":
+          case 'disconnected':
             onDisconnected();
             break;
-          case "connect_failure":
+          case 'connect_failure':
             isConnected = false;
             isCalling = isRinging = false;
             onConnectFailure();
             break;
-          case "connected":
+          case 'connected':
             isConnected = true;
-            onConnected();
+            String sid, from, status;
+            if (call.arguments != null) {
+              sid = call.arguments['sid'];
+              from = call.arguments['from'];
+              status = call.arguments['status'];
+            }
+
+            onConnected(new HashMap()
+              ..addAll({
+                if (sid != null) 'sid': sid,
+                if (from != null) 'from': from,
+                if (status != null) 'status': status
+              }));
             break;
         }
       }

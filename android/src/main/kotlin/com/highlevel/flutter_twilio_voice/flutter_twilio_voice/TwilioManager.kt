@@ -19,7 +19,6 @@ import io.flutter.plugin.common.MethodChannel
 
 class TwilioManager(context: Context,
                     activity: Activity,
-                    powerManager: PowerManager,
                     wakeLock: PowerManager.WakeLock,
                     audioManager: AudioManager,
                     notificationManager: NotificationManager,
@@ -28,7 +27,6 @@ class TwilioManager(context: Context,
     private val TAG = "VoiceActivity"
 
     private val _wakeLock: PowerManager.WakeLock = wakeLock
-    private val _powerManager: PowerManager = powerManager
     private val _audioManager: AudioManager = audioManager
     private val _notificationManager: NotificationManager = notificationManager
     private val _context: Context = context
@@ -37,13 +35,13 @@ class TwilioManager(context: Context,
     private val CHANNEL_ID: String = "$TAG/NOTIFICATION_CHANNEL_ID";
     private var isShowingNotification: Boolean = false
     private val _activity: Activity = activity
-    private lateinit var twilioAndroid: TwilioAndroid
-
+    private var twilioAndroid: TwilioAndroid
+    lateinit var defaultIcon: String
 
     init {
         createNotificationChannel()
         checkAndRequestPermission()
-        twilioAndroid = TwilioAndroid(_context, _wakeLock, _audioManager,channel, createNotificationChannel = { createNotificationChannel() }, cancelNotification = { cancelNotification() })
+        twilioAndroid = TwilioAndroid(_context, _wakeLock, _audioManager, channel, cancelNotification = { cancelNotification() })
 
     }
 
@@ -57,7 +55,7 @@ class TwilioManager(context: Context,
     }
 
     fun cancelNotification() {
-        if (!isShowingNotification) {
+        if (isShowingNotification) {
             val notificationManager: NotificationManagerCompat = NotificationManagerCompat.from(_context)
             notificationManager.cancel(notificationId)
             isShowingNotification = false
@@ -79,6 +77,10 @@ class TwilioManager(context: Context,
 
     }
 
+    private fun getDrawableResourceId(context: Context, name: String): Int {
+        return context.resources.getIdentifier(name, "drawable", context.packageName)
+    }
+
     fun checkPermissionForMicrophone(): Boolean {
         val resultMic: Int = ContextCompat.checkSelfPermission(_context, Manifest.permission.RECORD_AUDIO)
         return resultMic == PackageManager.PERMISSION_DENIED
@@ -91,7 +93,7 @@ class TwilioManager(context: Context,
         val builder: NotificationCompat.Builder = NotificationCompat.Builder(
                 _context, CHANNEL_ID
         )
-//                .setSmallIcon(R.drawable.ic_notification)
+                .setSmallIcon(getDrawableResourceId(context = _context, name = defaultIcon))
                 .setContentTitle(name)
                 .setContentText("Outbound call")
                 .setContentIntent(pendingIntent)
