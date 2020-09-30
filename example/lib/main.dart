@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import 'package:flutter_twilio_voice/flutter_twilio_voice.dart';
+import 'package:flutter_twilio_voice/models/call.dart';
+
 void main() {
   runApp(MyApp());
 }
@@ -11,52 +14,109 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
+  FlutterTwilioVoice twilioVoice;
+  bool isCalling = false,
+      isRinging = false,
+      isConnected = false,
+      onHold = false,
+      onSpeaker = true,
+      onMute = false;
 
   @override
   void initState() {
     super.initState();
-    initPlatformState();
+    twilioVoice = FlutterTwilioVoice(
+        defaultIcon: "periscope",
+        onRinging: () {
+          isCalling = isRinging = true;
+          setState(() {});
+        },
+        onConnectFailure: () {
+          print('faiure');
+          closeScreen('Connection Failure');
+        },
+        onConnected: (data) {
+          print('connected, Status: ${data['status']}');
+          isConnected = true;
+
+          setState(() {});
+        },
+        onPermissionDenied: () {
+          print('permission denied');
+          closeScreen('Permission Denied');
+        },
+        onDisconnected: () {
+          print('call disconnected');
+          closeScreen('Call Disconnected');
+        });
+    _fetchButtonStates();
+    _makeCall();
+  }
+  void _keyPress(String keyValue) async {
+    twilioVoice.pressKey(keyValue: keyValue);
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    // FlutterTwilioVoice flutterTwilioVoice = FlutterTwilioVoice(onConnected: () {
-    //   print('cinn');
-    // }, onConnectFailure: () {
-    //   print('cinnaa');
-    // }, onPermissionDenied: () {
-    //   print('cinnsas');
-    // });
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // try {
-    //   // platformVersion = await FlutterTwilioVoice.platformVersion;
-    // } on PlatformException {
-    //   platformVersion = 'Failed to get platform version.';
-    // }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _platformVersion = platformVersion;
+  void _makeCall() async {
+    twilioVoice
+        .connectCall(
+            call: Call(
+      accessToken: 'accessToken',
+      callerId: 'callerId' ?? '',
+      locationId: 'locationId',
+      name: 'widget.contact.fullName',
+      to: ' widget.contact.phone',
+    ))
+        .catchError((e) {
+      print(e);
     });
   }
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Plugin example app'),
-        ),
-        body: Center(
-          child: Text('Running on: $_platformVersion\n'),
-        ),
-      ),
-    );
+  Widget build(BuildContext context) {}
+
+  void closeScreen(String message) {
+    isConnected = false;
+    isCalling = isRinging = false;
+    // code to act on closing of call/error/permission denied
+  }
+
+  void _toggleHold() async {
+    var result = await twilioVoice.hold();
+    print("hold $result");
+    setState(() {
+      onHold = result;
+    });
+  }
+
+  void _toggleMute() async {
+    var result = await twilioVoice.mute();
+    print("mute $result");
+    setState(() {
+      onMute = result;
+    });
+  }
+
+  void _toggleSpeaker(bool speaker) async {
+    var result = await twilioVoice.speaker(speaker);
+    print("speaker $result");
+    setState(() {
+      onSpeaker = result;
+    });
+  }
+
+  void _disconnect() {
+    twilioVoice.disconnectCall();
+  }
+
+  @override
+  void dispose() {
+    _disconnect();
+    super.dispose();
+  }
+
+  void _fetchButtonStates() {
+    _toggleMute();
+    _toggleHold();
+    _toggleSpeaker(false);
   }
 }
