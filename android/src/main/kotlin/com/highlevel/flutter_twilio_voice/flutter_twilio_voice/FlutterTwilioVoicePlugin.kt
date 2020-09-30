@@ -35,6 +35,7 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
     private lateinit var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
     private lateinit var twilioManager: TwilioManager
     private val PERMISSION_REQUEST_CODE = 1
+    private lateinit var context: Context
 
     var appPermission = arrayOf(
             Manifest.permission.RECORD_AUDIO,
@@ -42,18 +43,28 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
             Manifest.permission.CAMERA)
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+        Log.e("FlutterTwili", "on attached engine")
+
         this.flutterPluginBinding = flutterPluginBinding
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_twilio_voice")
         channel.setMethodCallHandler(this)
+        context = flutterPluginBinding.applicationContext
     }
 
+
     companion object {
+        private lateinit var instance: FlutterTwilioVoicePlugin
+
         @JvmStatic
         fun registerWith(registrar: Registrar) {
-            Toast.makeText(registrar.activeContext(), "Hello", Toast.LENGTH_LONG).show();
-            val channel = MethodChannel(registrar.messenger(), "flutter_twilio_voice")
-            channel.setMethodCallHandler(FlutterTwilioVoicePlugin())
-            Log.e("FlutterTwili", "register with")
+
+            Log.e("FlutterTwili", "adding instance1")
+            instance = FlutterTwilioVoicePlugin()
+            instance.channel = MethodChannel(registrar.messenger(), "flutter_twilio_voice")
+            instance.channel.setMethodCallHandler(instance)
+            instance.initPlugin(registrar.activity())
+            instance.context = registrar.activeContext()
+
         }
     }
 
@@ -75,15 +86,27 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
 
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
-        Log.e("FlutterTwili", "method call ${call.arguments} ${call.method}")
+        Log.e("FlutterTwili", "method :- ${call.method}, arguments: ${call.arguments} ")
         when (call.method) {
+            "icon" -> {
+                val isValid: Boolean = isValidDrawableResource(context, call.argument<String>("icon") as String)
+                if (isValid)
+                    twilioManager.defaultIcon = call.argument<String>("icon") as String
+                result.success(true)
+            }
             "call" -> {
                 Log.e("FlutterTwili", "call")
+                val isValid: Boolean = isValidDrawableResource(context, call.argument<String>("icon") as String)
+                if (isValid)
+                    twilioManager.defaultIcon = call.argument<String>("icon") as String
+                Log.e("FlutterTwili", "Default icon updated")
+
                 twilioManager.startCall(call.argument<String>("name") as String,
                         call.argument<String>("accessToken") as String,
                         call.argument<String>("to") as String,
                         call.argument<String>("locationId") as String,
                         call.argument<String>("callerId") as String)
+                result.success(true)
 
             }
             "hold" -> {
@@ -101,14 +124,31 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
             "keyPress" -> {
                 Log.e("FlutterTwili", "keyPress")
                 twilioManager.keyPress(call.argument<String>("digit") as String)
+                result.success(true)
+
             }
             "disconnect" -> {
                 Log.e("FlutterTwili", "disconnect")
                 twilioManager.disconnectCall()
+                result.success(true)
             }
             else -> {
                 Log.e("FlutterTwili", "something else ${call.method}")
+                result.success(true)
+
             }
+        }
+    }
+
+    private fun isValidDrawableResource(context: Context, name: String): Boolean {
+        Log.e("FlutterTwili", "name: $name, ${context.packageName}")
+        val resourceId: Int = context.resources.getIdentifier(name, "drawable", context.packageName)
+        if (resourceId == 0) {
+            Log.e("FlutterTwili", "no drawable")
+            return false;
+        } else {
+            Log.e("FlutterTwili", "drawable $resourceId")
+            return true;
         }
     }
 
@@ -118,7 +158,30 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
         channel.setMethodCallHandler(null)
     }
 
+    fun initPlugin(activity: Activity) {
+        Toast.makeText(activity.applicationContext, "BOLO", Toast.LENGTH_LONG).show();
+
+        Log.e("FlutterTwili", "onAttachedToActivity")
+        checkAndRequestPermission(activity)
+
+        try {
+            _field = PowerManager::class.java.javaClass.getField("PROXIMITY_SCREEN_OFF_WAKE_LOCK").getInt(null)
+        } catch (e: Exception) {
+        }
+
+        twilioManager = TwilioManager(context = activity,
+                activity = activity,
+                audioManager = (activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager?)!!,
+                wakeLock = (activity.getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(_field, activity.localClassName),
+                notificationManager = (activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager),
+                channel = channel
+        )
+        activity.volumeControlStream = AudioManager.STREAM_VOICE_CALL
+    }
+
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        Toast.makeText(binding.activity.applicationContext, "BOLO", Toast.LENGTH_LONG).show();
+
         Log.e("FlutterTwili", "onAttachedToActivity")
         checkAndRequestPermission(binding.activity)
 
@@ -130,7 +193,6 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
         twilioManager = TwilioManager(context = binding.activity,
                 activity = binding.activity,
                 audioManager = (binding.activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager?)!!,
-                powerManager = (binding.activity.getSystemService(POWER_SERVICE) as PowerManager?)!!,
                 wakeLock = (binding.activity.getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(_field, binding.activity.localClassName),
                 notificationManager = (binding.activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager),
                 channel = channel

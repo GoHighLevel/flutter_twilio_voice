@@ -5,5 +5,6 @@ class MethodChannelMethods{
   static const String MUTE='mute';
   static const String KEY_PRESS='keyPress';
   static const String DISCONNECT='disconnect';
+  static const String ICON='icon';
 
 }

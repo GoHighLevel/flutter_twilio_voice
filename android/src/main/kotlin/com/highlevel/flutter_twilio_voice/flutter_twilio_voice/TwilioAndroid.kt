@@ -15,7 +15,6 @@ class TwilioAndroid(context: Context,
                     wakeLock: PowerManager.WakeLock,
                     audioManager: AudioManager,
                     channel: MethodChannel,
-                    val createNotificationChannel: () -> Unit,
                     val cancelNotification: () -> Unit) {
     private val TAG = "FlutterTwilio"
 
@@ -27,12 +26,12 @@ class TwilioAndroid(context: Context,
 
     private val callListener: Call.Listener = callListener()
     private val _wakeLock: PowerManager.WakeLock = wakeLock
-    private var isShowingNotification: Boolean = false;
     private val _context: Context = context
-    var notificationId: Int = 123
     val _channel: MethodChannel = channel
 
     fun callListener(): Call.Listener {
+        Log.e(TAG, "Listening")
+
         return object : Call.Listener {
 
             override fun onRinging(call: Call) {
@@ -62,12 +61,14 @@ class TwilioAndroid(context: Context,
                 activeCall = call
                 val callSid: String? = call.sid
                 val callFrom: String? = call.from
-                Log.e(TAG, "Connnected from: $callFrom")
+                Log.e(TAG, "Connnected from: $callFrom, SID: $callSid")
 
                 val args: HashMap<String, String> = HashMap<String, String>()
-                args.put("status", "connected");
-                args.put("sid", callSid!!)
-                args.put("from", callFrom!!)
+                args.put("status", "connected")
+                if (callSid != null)
+                    args.put("sid", callSid)
+                if (callFrom != null)
+                    args.put("from", callFrom)
                 _channel.invokeMethod("call_listener", args)
             }
 
@@ -132,6 +133,7 @@ class TwilioAndroid(context: Context,
     }
 
     fun invokeCall(accessToken: String, to: String, locationId: String, callerId: String) {
+        Log.e(TAG, "invoked call")
         params.put("number", to)
         params.put("callerId", callerId)
         params.put("location", locationId)
@@ -143,6 +145,7 @@ class TwilioAndroid(context: Context,
                 .preferAudioCodecs(codecList)
                 .build()
         activeCall = Voice.connect(_context, connectOptions, callListener)
+
     }
 
     fun disconnect() {
@@ -173,7 +176,7 @@ class TwilioAndroid(context: Context,
 
     fun speaker(speaker: Boolean): Boolean {
         try {
-            _audioManager.setSpeakerphoneOn(speaker)
+            _audioManager.isSpeakerphoneOn = speaker
         } catch (e: Exception) {
             Log.e(TAG, "speaker: ", e)
         }

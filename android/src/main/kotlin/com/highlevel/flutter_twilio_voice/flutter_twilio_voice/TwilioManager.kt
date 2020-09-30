@@ -11,6 +11,7 @@ import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.os.Build
 import android.os.PowerManager
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -19,7 +20,6 @@ import io.flutter.plugin.common.MethodChannel
 
 class TwilioManager(context: Context,
                     activity: Activity,
-                    powerManager: PowerManager,
                     wakeLock: PowerManager.WakeLock,
                     audioManager: AudioManager,
                     notificationManager: NotificationManager,
@@ -28,7 +28,6 @@ class TwilioManager(context: Context,
     private val TAG = "VoiceActivity"
 
     private val _wakeLock: PowerManager.WakeLock = wakeLock
-    private val _powerManager: PowerManager = powerManager
     private val _audioManager: AudioManager = audioManager
     private val _notificationManager: NotificationManager = notificationManager
     private val _context: Context = context
@@ -38,12 +37,12 @@ class TwilioManager(context: Context,
     private var isShowingNotification: Boolean = false
     private val _activity: Activity = activity
     private lateinit var twilioAndroid: TwilioAndroid
-
+    lateinit var defaultIcon: String
 
     init {
         createNotificationChannel()
         checkAndRequestPermission()
-        twilioAndroid = TwilioAndroid(_context, _wakeLock, _audioManager,channel, createNotificationChannel = { createNotificationChannel() }, cancelNotification = { cancelNotification() })
+        twilioAndroid = TwilioAndroid(_context, _wakeLock, _audioManager, channel, cancelNotification = { cancelNotification() })
 
     }
 
@@ -79,6 +78,10 @@ class TwilioManager(context: Context,
 
     }
 
+    private fun getDrawableResourceId(context: Context, name: String): Int {
+        return context.resources.getIdentifier(name, "drawable", context.packageName)
+    }
+
     fun checkPermissionForMicrophone(): Boolean {
         val resultMic: Int = ContextCompat.checkSelfPermission(_context, Manifest.permission.RECORD_AUDIO)
         return resultMic == PackageManager.PERMISSION_DENIED
@@ -91,7 +94,7 @@ class TwilioManager(context: Context,
         val builder: NotificationCompat.Builder = NotificationCompat.Builder(
                 _context, CHANNEL_ID
         )
-//                .setSmallIcon(R.drawable.ic_notification)
+                .setSmallIcon(getDrawableResourceId(context = _context, name = defaultIcon))
                 .setContentTitle(name)
                 .setContentText("Outbound call")
                 .setContentIntent(pendingIntent)
@@ -108,22 +111,31 @@ class TwilioManager(context: Context,
     }
 
     fun toggleHold(): Boolean {
+        Log.e(TAG, "Toggling hold for call")
+
         return twilioAndroid.hold()
     }
 
     fun toggleSpeaker(speaker: Boolean): Boolean {
+        Log.e(TAG, "Toggling speaker for call")
+
         return twilioAndroid.speaker(speaker)
     }
 
     fun toggleMute(): Boolean {
+        Log.e(TAG, "toggling mute for call")
+
         return twilioAndroid.mute()
     }
 
     fun disconnectCall() {
+        Log.e(TAG, "Disconnecting call")
+
         twilioAndroid.disconnect()
     }
 
     fun keyPress(digit: String) {
+        Log.e(TAG, "Pressing key for: $digit")
         twilioAndroid.keyPress(digit)
     }
 }

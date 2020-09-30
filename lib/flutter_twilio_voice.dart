@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_twilio_voice/constants/method_channel_methods.dart';
@@ -6,7 +7,7 @@ import 'package:flutter_twilio_voice/exceptions/twilio_call_exceptions.dart';
 import 'package:flutter_twilio_voice/models/call.dart';
 import 'package:meta/meta.dart';
 
-class   FlutterTwilioVoice {
+class FlutterTwilioVoice {
   static const MethodChannel _channel =
       const MethodChannel('flutter_twilio_voice');
   bool isCalling = false,
@@ -15,18 +16,21 @@ class   FlutterTwilioVoice {
       onHold = false,
       onSpeaker = true,
       onMute = false;
-  
+
   Function onConnected;
   Function onDisconnected;
   Function onPermissionDenied;
   Function onConnectFailure;
+  String defaultIcon;
 
   static Future<String> get platformVersion async {
+    print('dad');
     final String version = await _channel.invokeMethod('getPlatformVersion');
     return version;
   }
 
   FlutterTwilioVoice({
+    @required this.defaultIcon,
     @required this.onConnected,
     @required this.onPermissionDenied,
     @required this.onConnectFailure,
@@ -43,13 +47,37 @@ class   FlutterTwilioVoice {
       "name": call.name,
       "locationId": call.locationId,
       "callerId": call.callerId,
+      'icon': defaultIcon
     }).then((value) {
       completer.complete();
-    }, onError: (PlatformException e) {
-      throw TwilioCallException(
-        error: e.message,
-      );
+    }, onError: (Object e) {
+      if (e is PlatformException)
+        throw TwilioCallException(
+          error: e.message,
+        );
+      else
+        print(e);
     });
+    return completer.future;
+  }
+
+  Future<void> updateIcon() async {
+    Completer<void> completer = Completer();
+    _channel
+        .invokeMethod(MethodChannelMethods.ICON, {
+          "icon": defaultIcon,
+        })
+        .then((result) => completer.complete(result))
+        .catchError((Object e) {
+          print("Error in update Icon");
+          if (e is PlatformException)
+            throw TwilioCallException(
+              error: e.message,
+            );
+          else
+            print(e);
+        });
+
     return completer.future;
   }
 
@@ -58,10 +86,13 @@ class   FlutterTwilioVoice {
     _channel
         .invokeMethod(MethodChannelMethods.HOLD)
         .then((result) => completer.complete(result))
-        .catchError((PlatformException e) {
-      throw TwilioCallException(
-        error: e.message,
-      );
+        .catchError((Object e) {
+      if (e is PlatformException)
+        throw TwilioCallException(
+          error: e.message,
+        );
+      else
+        print(e);
     });
 
     return completer.future;
@@ -73,10 +104,13 @@ class   FlutterTwilioVoice {
         .invokeMethod(
             MethodChannelMethods.SPEAKER, {'speaker': speaker ?? false})
         .then((result) => completer.complete(result))
-        .catchError((PlatformException e) {
-          throw TwilioCallException(
-            error: e.message,
-          );
+        .catchError((Object e) {
+          if (e is PlatformException)
+            throw TwilioCallException(
+              error: e.message,
+            );
+          else
+            print(e);
         });
 
     return completer.future;
@@ -87,7 +121,9 @@ class   FlutterTwilioVoice {
     _channel
         .invokeMethod(MethodChannelMethods.MUTE)
         .then((result) => completer.complete(result))
-        .catchError((PlatformException e) {});
+        .catchError((Object e) {
+      print(e);
+    });
 
     return completer.future;
   }
@@ -97,10 +133,11 @@ class   FlutterTwilioVoice {
     _channel
         .invokeMethod(MethodChannelMethods.KEY_PRESS, {'digit': keyValue})
         .then((result) => completer.complete())
-        .catchError((PlatformException e) {
-          throw TwilioCallException(
-            error: e.message
-          );
+        .catchError((Object e) {
+          if (e is PlatformException)
+            throw TwilioCallException(error: e.message);
+          else
+            print(e);
         });
 
     return completer.future;
@@ -109,12 +146,13 @@ class   FlutterTwilioVoice {
   Future<void> disconnect() {
     Completer<void> completer = Completer();
     _channel
-        .invokeMethod(MethodChannelMethods.MUTE)
+        .invokeMethod(MethodChannelMethods.DISCONNECT)
         .then((result) => completer.complete())
-        .catchError((PlatformException e) {
-      throw TwilioCallException(
-        error: e.message
-      );
+        .catchError((Object e) {
+      if (e is PlatformException)
+        throw TwilioCallException(error: e.message);
+      else
+        print(e);
     });
 
     return completer.future;
@@ -142,7 +180,20 @@ class   FlutterTwilioVoice {
             break;
           case "connected":
             isConnected = true;
-            onConnected();
+            String sid, from, status;
+            if (call.arguments != null) {
+              print(call.arguments);
+              sid = call.arguments['sid'];
+              from = call.arguments['from'];
+              status = call.arguments['status'];
+            }
+
+            onConnected(new HashMap()
+              ..addAll({
+                if (sid != null) 'sid': sid,
+                if (from != null) 'from': from,
+                if (status != null) 'status': status
+              }));
             break;
         }
       }
