@@ -125,7 +125,6 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
         try {
             _field = PowerManager::class.java.javaClass.getField("PROXIMITY_SCREEN_OFF_WAKE_LOCK").getInt(null)
         } catch (e: Exception) {
-            return
         }
         twilioManager = TwilioManager(context = activity,
                 activity = activity,
