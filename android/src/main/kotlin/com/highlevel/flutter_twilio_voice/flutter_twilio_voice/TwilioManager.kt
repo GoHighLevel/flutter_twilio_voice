@@ -11,7 +11,6 @@ import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.os.Build
 import android.os.PowerManager
-import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -36,7 +35,7 @@ class TwilioManager(context: Context,
     private val CHANNEL_ID: String = "$TAG/NOTIFICATION_CHANNEL_ID";
     private var isShowingNotification: Boolean = false
     private val _activity: Activity = activity
-    private lateinit var twilioAndroid: TwilioAndroid
+    private var twilioAndroid: TwilioAndroid
     lateinit var defaultIcon: String
 
     init {
@@ -56,7 +55,6 @@ class TwilioManager(context: Context,
     }
 
     fun cancelNotification() {
-        Log.e(TAG,"Canceling notification")
         if (isShowingNotification) {
             val notificationManager: NotificationManagerCompat = NotificationManagerCompat.from(_context)
             notificationManager.cancel(notificationId)
@@ -112,31 +110,22 @@ class TwilioManager(context: Context,
     }
 
     fun toggleHold(): Boolean {
-        Log.e(TAG, "Toggling hold for call")
-
         return twilioAndroid.hold()
     }
 
     fun toggleSpeaker(speaker: Boolean): Boolean {
-        Log.e(TAG, "Toggling speaker for call")
-
         return twilioAndroid.speaker(speaker)
     }
 
     fun toggleMute(): Boolean {
-        Log.e(TAG, "toggling mute for call")
-
         return twilioAndroid.mute()
     }
 
     fun disconnectCall() {
-        Log.e(TAG, "Disconnecting call")
-
         twilioAndroid.disconnect()
     }
 
     fun keyPress(digit: String) {
-        Log.e(TAG, "Pressing key for: $digit")
         twilioAndroid.keyPress(digit)
     }
 }

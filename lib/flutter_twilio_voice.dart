@@ -1,11 +1,12 @@
-import 'dart:async';
-import 'dart:collection';
+import 'dart:async' show Completer;
+import 'dart:collection' show HashMap;
 
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart'
+    show PlatformException, MethodChannel, MethodCall;
 import 'package:flutter_twilio_voice/constants/method_channel_methods.dart';
 import 'package:flutter_twilio_voice/exceptions/twilio_call_exceptions.dart';
 import 'package:flutter_twilio_voice/models/call.dart';
-import 'package:meta/meta.dart';
+import 'package:meta/meta.dart' show required;
 
 class FlutterTwilioVoice {
   static const MethodChannel _channel =
@@ -17,18 +18,12 @@ class FlutterTwilioVoice {
       onSpeaker = true,
       onMute = false;
 
-  Function onConnected;
-  Function onDisconnected;
-  Function onPermissionDenied;
-  Function onConnectFailure;
-  Function onRinging;
-  String defaultIcon;
-
-  static Future<String> get platformVersion async {
-    print('dad');
-    final String version = await _channel.invokeMethod('getPlatformVersion');
-    return version;
-  }
+  final Function onConnected;
+  final Function onDisconnected;
+  final Function onPermissionDenied;
+  final Function onConnectFailure;
+  final Function onRinging;
+  final String defaultIcon;
 
   FlutterTwilioVoice({
     @required this.defaultIcon,
@@ -41,46 +36,24 @@ class FlutterTwilioVoice {
     _listenToMethodCalls();
   }
 
-  Future<void> call({@required Call call}) async {
+  Future<void> connectCall({@required Call call}) async {
     Completer<void> completer = Completer();
 
     _channel.invokeMethod(MethodChannelMethods.CALL, {
-      "to": call.to,
-      "accessToken": call.accessToken,
-      "name": call.name,
-      "locationId": call.locationId,
-      "callerId": call.callerId,
+      'to': call.to,
+      'accessToken': call.accessToken,
+      'name': call.name,
+      'locationId': call.locationId,
+      'callerId': call.callerId,
       'icon': defaultIcon
     }).then((value) {
       completer.complete();
     }, onError: (Object e) {
       if (e is PlatformException)
-        throw TwilioCallException(
-          error: e.message,
-        );
+        throw TwilioCallException(error: e.message);
       else
-        print(e);
+        throw e;
     });
-    return completer.future;
-  }
-
-  Future<void> updateIcon() async {
-    Completer<void> completer = Completer();
-    _channel
-        .invokeMethod(MethodChannelMethods.ICON, {
-          "icon": defaultIcon,
-        })
-        .then((result) => completer.complete(result))
-        .catchError((Object e) {
-          print("Error in update Icon");
-          if (e is PlatformException)
-            throw TwilioCallException(
-              error: e.message,
-            );
-          else
-            print(e);
-        });
-
     return completer.future;
   }
 
@@ -91,13 +64,10 @@ class FlutterTwilioVoice {
         .then((result) => completer.complete(result))
         .catchError((Object e) {
       if (e is PlatformException)
-        throw TwilioCallException(
-          error: e.message,
-        );
+        throw TwilioCallException(error: e.message);
       else
-        print(e);
+        throw e;
     });
-
     return completer.future;
   }
 
@@ -109,11 +79,9 @@ class FlutterTwilioVoice {
         .then((result) => completer.complete(result))
         .catchError((Object e) {
           if (e is PlatformException)
-            throw TwilioCallException(
-              error: e.message,
-            );
+            throw TwilioCallException(error: e.message);
           else
-            print(e);
+            throw e;
         });
 
     return completer.future;
@@ -125,13 +93,16 @@ class FlutterTwilioVoice {
         .invokeMethod(MethodChannelMethods.MUTE)
         .then((result) => completer.complete(result))
         .catchError((Object e) {
-      print(e);
+      if (e is PlatformException)
+        throw TwilioCallException(error: e.message);
+      else
+        throw e;
     });
 
     return completer.future;
   }
 
-  Future<void> keyPress({@required String keyValue}) {
+  Future<void> pressKey({@required String keyValue}) {
     Completer<void> completer = Completer();
     _channel
         .invokeMethod(MethodChannelMethods.KEY_PRESS, {'digit': keyValue})
@@ -140,13 +111,13 @@ class FlutterTwilioVoice {
           if (e is PlatformException)
             throw TwilioCallException(error: e.message);
           else
-            print(e);
+            throw e;
         });
 
     return completer.future;
   }
 
-  Future<void> disconnect() {
+  Future<void> disconnectCall() {
     Completer<void> completer = Completer();
     _channel
         .invokeMethod(MethodChannelMethods.DISCONNECT)
@@ -155,7 +126,7 @@ class FlutterTwilioVoice {
       if (e is PlatformException)
         throw TwilioCallException(error: e.message);
       else
-        print(e);
+        throw e;
     });
 
     return completer.future;
@@ -163,30 +134,28 @@ class FlutterTwilioVoice {
 
   void _listenToMethodCalls() {
     _channel.setMethodCallHandler((MethodCall call) async {
-      if (call.method == "call_listener") {
+      if (call.method == 'call_listener') {
         String status = call.arguments['status'];
-        print('status: $status');
         switch (status) {
-          case "ringing":
+          case 'ringing':
             isCalling = isRinging = true;
             onRinging();
             break;
-          case "permission_denied":
+          case 'permission_denied':
             onPermissionDenied();
             break;
-          case "disconnected":
+          case 'disconnected':
             onDisconnected();
             break;
-          case "connect_failure":
+          case 'connect_failure':
             isConnected = false;
             isCalling = isRinging = false;
             onConnectFailure();
             break;
-          case "connected":
+          case 'connected':
             isConnected = true;
             String sid, from, status;
             if (call.arguments != null) {
-              print(call.arguments);
               sid = call.arguments['sid'];
               from = call.arguments['from'];
               status = call.arguments['status'];

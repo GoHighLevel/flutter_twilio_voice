@@ -17,52 +17,40 @@ class TwilioAndroid(context: Context,
                     channel: MethodChannel,
                     val cancelNotification: () -> Unit) {
     private val TAG = "FlutterTwilio"
-
     private val _audioManager: AudioManager = audioManager
-
     private var savedAudioMode = AudioManager.MODE_INVALID
     private var params: HashMap<String, String> = HashMap<String, String>()
     private var activeCall: Call? = null
-
     private val callListener: Call.Listener = callListener()
     private val _wakeLock: PowerManager.WakeLock = wakeLock
     private val _context: Context = context
     val _channel: MethodChannel = channel
 
     fun callListener(): Call.Listener {
-        Log.e(TAG, "Listening")
-
         return object : Call.Listener {
-
             override fun onRinging(call: Call) {
-                Log.e(TAG, "on Ringing")
                 val args = HashMap<String, String>()
                 args.put("status", "ringing")
                 _channel.invokeMethod("call_listener", args)
             }
 
             override fun onConnectFailure(call: Call, callException: CallException) {
-                Log.e(TAG, "on Connect Failure")
                 setAudioFocus(false)
                 stopWakeLock();
                 val message: String = String.format("Call Error:%d, %s", callException.errorCode, callException.message)
-                Log.e(TAG, message)
                 cancelNotification()
                 val args = HashMap<String, String>()
                 args.put("status", "connect_failure")
-
+                args.put("message",message)
                 _channel.invokeMethod("call_listener", args)
             }
 
 
             override fun onConnected(call: Call) {
-                Log.e(TAG, "on Connected")
                 setAudioFocus(true)
                 activeCall = call
                 val callSid: String? = call.sid
                 val callFrom: String? = call.from
-                Log.e(TAG, "Connnected from: $callFrom, SID: $callSid")
-
                 val args: HashMap<String, String> = HashMap<String, String>()
                 args.put("status", "connected")
                 if (callSid != null)
@@ -73,25 +61,20 @@ class TwilioAndroid(context: Context,
             }
 
             override fun onReconnecting(call: Call, callException: CallException) {
-                Log.e(TAG, "on Reconnecting")
             }
 
             override fun onReconnected(call: Call) {
-                Log.e(TAG, "on Reconnected")
-
             }
 
             override fun onDisconnected(call: Call, callException: CallException?) {
-                Log.e(TAG, "on Disconnected")
                 setAudioFocus(false)
                 stopWakeLock()
+                val args: HashMap<String, String> = HashMap<String, String>()
                 if (callException != null) {
                     val message: String = String.format("Call Error: %d %s", callException.errorCode, callException.message)
+                    args.put("message",message)
                 }
-                Log.e(TAG, "Cancel notification called")
-
                 cancelNotification()
-                val args: HashMap<String, String> = HashMap<String, String>()
                 args.put("status", "disconnected")
                 _channel.invokeMethod("call_listener", args)
             }
@@ -135,7 +118,6 @@ class TwilioAndroid(context: Context,
     }
 
     fun invokeCall(accessToken: String, to: String, locationId: String, callerId: String) {
-        Log.e(TAG, "invoked call")
         params.put("number", to)
         params.put("callerId", callerId)
         params.put("location", locationId)
@@ -180,7 +162,6 @@ class TwilioAndroid(context: Context,
         try {
             _audioManager.isSpeakerphoneOn = speaker
         } catch (e: Exception) {
-            Log.e(TAG, "speaker: ", e)
         }
         return _audioManager.isSpeakerphoneOn
     }
