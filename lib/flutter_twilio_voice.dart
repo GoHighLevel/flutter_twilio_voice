@@ -45,6 +45,7 @@ class FlutterTwilioVoice {
       'name': call.name,
       'locationId': call.locationId,
       'callerId': call.callerId,
+      'from': call.from,
       'icon': defaultIcon
     }).then((value) {
       completer.complete();
@@ -155,6 +156,8 @@ class FlutterTwilioVoice {
           case 'connected':
             isConnected = true;
             String sid, from, status;
+            print('arguments');
+            print(call.arguments);
             if (call.arguments != null) {
               sid = call.arguments['sid'];
               from = call.arguments['from'];

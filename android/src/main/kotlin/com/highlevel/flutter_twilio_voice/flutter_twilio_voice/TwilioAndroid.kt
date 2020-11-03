@@ -51,6 +51,7 @@ class TwilioAndroid(context: Context,
                 activeCall = call
                 val callSid: String? = call.sid
                 val callFrom: String? = call.from
+                Log.e("Call",call.toString())
                 val args: HashMap<String, String> = HashMap<String, String>()
                 args.put("status", "connected")
                 if (callSid != null)
@@ -117,10 +118,12 @@ class TwilioAndroid(context: Context,
         }
     }
 
-    fun invokeCall(accessToken: String, to: String, locationId: String, callerId: String) {
+    fun invokeCall(accessToken: String, to: String, locationId: String, callerId: String,from:String) {
         params.put("number", to)
         params.put("callerId", callerId)
         params.put("location", locationId)
+        params.put("from",from)
+        Log.d("Params",params.toString())
         val codecList: ArrayList<AudioCodec> = ArrayList<AudioCodec>()
         codecList.add(OpusCodec())
         codecList.add(PcmuCodec())
