@@ -38,15 +38,12 @@ class FlutterTwilioVoice {
 
   Future<void> connectCall({@required Call call}) async {
     Completer<void> completer = Completer();
-
+    print(call.dataToSend);
     _channel.invokeMethod(MethodChannelMethods.CALL, {
-      'to': call.to,
-      'accessToken': call.accessToken,
+      'icon': defaultIcon,
       'name': call.name,
-      'locationId': call.locationId,
-      'callerId': call.callerId,
-      'from': call.from,
-      'icon': defaultIcon
+      'accessToken': call.accessToken,
+      'data': call.dataToSend
     }).then((value) {
       completer.complete();
     }, onError: (Object e) {

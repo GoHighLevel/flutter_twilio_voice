@@ -118,11 +118,12 @@ class TwilioAndroid(context: Context,
         }
     }
 
-    fun invokeCall(accessToken: String, to: String, locationId: String, callerId: String,from:String) {
-        params.put("number", to)
-        params.put("callerId", callerId)
-        params.put("location", locationId)
-        params.put("from",from)
+    fun invokeCall(accessToken: String, data: HashMap<String, String>) {
+        Log.e("Debug","invoke call")
+        data.entries.forEach {it->
+            Log.e("Values","${it.key} => ${it.value}")
+            params.put(it.key,it.value)
+        }
         Log.d("Params",params.toString())
         val codecList: ArrayList<AudioCodec> = ArrayList<AudioCodec>()
         codecList.add(OpusCodec())

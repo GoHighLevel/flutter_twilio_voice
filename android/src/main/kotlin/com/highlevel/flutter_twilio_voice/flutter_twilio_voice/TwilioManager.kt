@@ -11,6 +11,7 @@ import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.os.Build
 import android.os.PowerManager
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -102,11 +103,12 @@ class TwilioManager(context: Context,
         val notificationManager: NotificationManagerCompat = NotificationManagerCompat.from(_context)
         notificationManager.notify(notificationId, builder.build())
         isShowingNotification = true
-    }
+    }       
 
-    fun startCall(name: String, accessToken: String, toUser: String, locationId: String, callerId: String,from:String) {
+    fun startCall(name: String, accessToken: String, data: HashMap<String, String>) {
+        Log.e("Debug","start Call")
         buildCallNotification(name)
-        twilioAndroid.invokeCall(accessToken, toUser, locationId, callerId,from)
+        twilioAndroid.invokeCall(accessToken,data)
     }
 
     fun toggleHold(): Boolean {
