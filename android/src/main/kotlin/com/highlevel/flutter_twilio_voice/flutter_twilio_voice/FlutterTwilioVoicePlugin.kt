@@ -82,9 +82,8 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
                     twilioManager.defaultIcon = call.argument<String>("icon") as String
                 twilioManager.startCall(call.argument<String>("name") as String,
                         call.argument<String>("accessToken") as String,
-                        call.argument<String>("to") as String,
-                        call.argument<String>("locationId") as String,
-                        call.argument<String>("callerId") as String)
+                        call.argument<HashMap<String,String>>("data") as HashMap<String,String>
+                        )
                 result.success(true)
 
             }

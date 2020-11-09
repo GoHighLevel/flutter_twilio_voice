@@ -1,18 +1,9 @@
 import 'package:flutter/cupertino.dart';
 
 class Call {
-  String to;
   String accessToken;
   String name;
-  String locationId;
-  String callerId;
+  Map<String, String> dataToSend;
 
-  Call({
-    @required this.to,
-    @required this.accessToken,
-    @required this.name,
-    @required this.locationId,
-    @required this.callerId,
-  });
-
+  Call({@required this.accessToken, @required this.name, this.dataToSend});
 }
