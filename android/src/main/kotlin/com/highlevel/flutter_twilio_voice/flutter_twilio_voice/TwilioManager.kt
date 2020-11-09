@@ -102,11 +102,11 @@ class TwilioManager(context: Context,
         val notificationManager: NotificationManagerCompat = NotificationManagerCompat.from(_context)
         notificationManager.notify(notificationId, builder.build())
         isShowingNotification = true
-    }
+    }       
 
-    fun startCall(name: String, accessToken: String, toUser: String, locationId: String, callerId: String) {
+    fun startCall(name: String, accessToken: String, data: HashMap<String, String>) {
         buildCallNotification(name)
-        twilioAndroid.invokeCall(accessToken, toUser, locationId, callerId)
+        twilioAndroid.invokeCall(accessToken,data)
     }
 
     fun toggleHold(): Boolean {

@@ -38,14 +38,12 @@ class FlutterTwilioVoice {
 
   Future<void> connectCall({@required Call call}) async {
     Completer<void> completer = Completer();
-
+    print(call.dataToSend);
     _channel.invokeMethod(MethodChannelMethods.CALL, {
-      'to': call.to,
-      'accessToken': call.accessToken,
+      'icon': defaultIcon,
       'name': call.name,
-      'locationId': call.locationId,
-      'callerId': call.callerId,
-      'icon': defaultIcon
+      'accessToken': call.accessToken,
+      'data': call.dataToSend
     }).then((value) {
       completer.complete();
     }, onError: (Object e) {
@@ -155,6 +153,8 @@ class FlutterTwilioVoice {
           case 'connected':
             isConnected = true;
             String sid, from, status;
+            print('arguments');
+            print(call.arguments);
             if (call.arguments != null) {
               sid = call.arguments['sid'];
               from = call.arguments['from'];
