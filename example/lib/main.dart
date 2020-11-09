@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
-
 import 'package:flutter_twilio_voice/flutter_twilio_voice.dart';
 import 'package:flutter_twilio_voice/models/call.dart';
 
@@ -32,40 +30,29 @@ class _MyAppState extends State<MyApp> {
           setState(() {});
         },
         onConnectFailure: () {
-          print('faiure');
           closeScreen('Connection Failure');
         },
         onConnected: (data) {
-          print('connected, Status: ${data['status']}');
           isConnected = true;
-
           setState(() {});
         },
         onPermissionDenied: () {
-          print('permission denied');
           closeScreen('Permission Denied');
         },
         onDisconnected: () {
-          print('call disconnected');
           closeScreen('Call Disconnected');
         });
     _fetchButtonStates();
     _makeCall();
-  }
-  void _keyPress(String keyValue) async {
-    twilioVoice.pressKey(keyValue: keyValue);
   }
 
   void _makeCall() async {
     twilioVoice
         .connectCall(
             call: Call(
-      accessToken: 'accessToken',
-      callerId: 'callerId' ?? '',
-      locationId: 'locationId',
-      name: 'widget.contact.fullName',
-      to: ' widget.contact.phone',
-    ))
+                accessToken: 'accessToken',
+                name: 'widget.contact.fullName',
+                dataToSend: {'var': 'value'}))
         .catchError((e) {
       print(e);
     });

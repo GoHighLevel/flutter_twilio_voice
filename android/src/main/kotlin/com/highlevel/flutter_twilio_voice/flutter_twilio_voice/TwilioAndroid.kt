@@ -7,7 +7,6 @@ import android.media.AudioManager
 import android.media.AudioManager.OnAudioFocusChangeListener
 import android.os.Build
 import android.os.PowerManager
-import android.util.Log
 import com.twilio.voice.*
 import io.flutter.plugin.common.MethodChannel
 
@@ -16,7 +15,6 @@ class TwilioAndroid(context: Context,
                     audioManager: AudioManager,
                     channel: MethodChannel,
                     val cancelNotification: () -> Unit) {
-    private val TAG = "FlutterTwilio"
     private val _audioManager: AudioManager = audioManager
     private var savedAudioMode = AudioManager.MODE_INVALID
     private var params: HashMap<String, String> = HashMap<String, String>()
@@ -51,7 +49,6 @@ class TwilioAndroid(context: Context,
                 activeCall = call
                 val callSid: String? = call.sid
                 val callFrom: String? = call.from
-                Log.e("Call",call.toString())
                 val args: HashMap<String, String> = HashMap<String, String>()
                 args.put("status", "connected")
                 if (callSid != null)
@@ -119,12 +116,9 @@ class TwilioAndroid(context: Context,
     }
 
     fun invokeCall(accessToken: String, data: HashMap<String, String>) {
-        Log.e("Debug","invoke call")
         data.entries.forEach {it->
-            Log.e("Values","${it.key} => ${it.value}")
             params.put(it.key,it.value)
         }
-        Log.d("Params",params.toString())
         val codecList: ArrayList<AudioCodec> = ArrayList<AudioCodec>()
         codecList.add(OpusCodec())
         codecList.add(PcmuCodec())

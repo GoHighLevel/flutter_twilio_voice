@@ -12,7 +12,6 @@ import android.os.PowerManager
 import androidx.annotation.NonNull
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import io.flutter.Log
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -78,8 +77,6 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         when (call.method) {
             "call" -> {
-                Log.e("Debug", ( call.argument<HashMap<String,String>>("data") as HashMap<String,String>).toString())
-
                 val isValid: Boolean = isValidDrawableResource(context, call.argument<String>("icon") as String)
                 if (isValid)
                     twilioManager.defaultIcon = call.argument<String>("icon") as String
