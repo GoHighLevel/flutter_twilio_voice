@@ -123,6 +123,7 @@ class TwilioManager(context: Context,
 
     fun disconnectCall() {
         twilioAndroid.disconnect()
+        _audioManager.mode = AudioManager.MODE_NORMAL
     }
 
     fun keyPress(digit: String) {

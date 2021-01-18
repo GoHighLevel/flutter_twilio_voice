@@ -41,6 +41,7 @@ class TwilioAndroid(context: Context,
                 args.put("status", "connect_failure")
                 args.put("message",message)
                 _channel.invokeMethod("call_listener", args)
+                _audioManager.mode = AudioManager.MODE_NORMAL
             }
 
 
@@ -75,6 +76,7 @@ class TwilioAndroid(context: Context,
                 cancelNotification()
                 args.put("status", "disconnected")
                 _channel.invokeMethod("call_listener", args)
+                _audioManager.mode = AudioManager.MODE_NORMAL
             }
 
         }

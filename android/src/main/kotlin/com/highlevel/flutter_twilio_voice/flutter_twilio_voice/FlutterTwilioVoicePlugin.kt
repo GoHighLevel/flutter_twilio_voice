@@ -83,7 +83,7 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
                 twilioManager.startCall(call.argument<String>("name") as String,
                         call.argument<String>("accessToken") as String,
                         call.argument<HashMap<String,String>>("data") as HashMap<String,String>
-                        )
+                )
                 result.success(true)
 
             }
@@ -132,7 +132,6 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
                 notificationManager = (activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager),
                 channel = channel
         )
-        activity.volumeControlStream = AudioManager.STREAM_VOICE_CALL
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
@@ -149,7 +148,6 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
                 notificationManager = (binding.activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager),
                 channel = channel
         )
-        binding.activity.volumeControlStream = AudioManager.STREAM_VOICE_CALL
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
