@@ -8,8 +8,10 @@ import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Context.POWER_SERVICE
 import android.content.pm.PackageManager
 import android.media.AudioManager
+import android.os.Build
 import android.os.PowerManager
 import androidx.annotation.NonNull
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -82,7 +84,7 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
                     twilioManager.defaultIcon = call.argument<String>("icon") as String
                 twilioManager.startCall(call.argument<String>("name") as String,
                         call.argument<String>("accessToken") as String,
-                        call.argument<HashMap<String,String>>("data") as HashMap<String,String>
+                        call.argument<HashMap<String, String>>("data") as HashMap<String, String>
                 )
                 result.success(true)
 
@@ -121,14 +123,10 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
 
     fun initPlugin(activity: Activity) {
         checkAndRequestPermission(activity)
-        try {
-            _field = PowerManager::class.java.javaClass.getField("PROXIMITY_SCREEN_OFF_WAKE_LOCK").getInt(null)
-        } catch (e: Exception) {
-        }
         twilioManager = TwilioManager(context = activity,
                 activity = activity,
                 audioManager = (activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager?)!!,
-                wakeLock = (activity.getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(_field, activity.localClassName),
+                wakeLock = (activity.getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, activity.localClassName),
                 notificationManager = (activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager),
                 channel = channel
         )
@@ -136,15 +134,11 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         checkAndRequestPermission(binding.activity)
-        try {
-            _field = PowerManager::class.java.javaClass.getField("PROXIMITY_SCREEN_OFF_WAKE_LOCK").getInt(null)
-        } catch (e: Exception) {
-            return
-        }
+
         twilioManager = TwilioManager(context = binding.activity,
                 activity = binding.activity,
                 audioManager = (binding.activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager?)!!,
-                wakeLock = (binding.activity.getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(_field, binding.activity.localClassName),
+                wakeLock = (binding.activity.getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, binding.activity.localClassName),
                 notificationManager = (binding.activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager),
                 channel = channel
         )
