@@ -98,7 +98,7 @@ class TwilioAndroid(context: Context,
 
                 _audioManager.requestAudioFocus(focusRequest)
             } else {
-                val focusRequestResult: Int = _audioManager.requestAudioFocus(OnAudioFocusChangeListener { focusChange: Int -> }, AudioManager.STREAM_VOICE_CALL,
+                _audioManager.requestAudioFocus(OnAudioFocusChangeListener { focusChange: Int -> }, AudioManager.STREAM_VOICE_CALL,
                         AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
             }
             _audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
@@ -109,12 +109,6 @@ class TwilioAndroid(context: Context,
     fun stopWakeLock() {
         if (_wakeLock.isHeld)
             _wakeLock.release()
-    }
-
-    fun startWakeLock() {
-        if (!_wakeLock.isHeld) {
-            _wakeLock.acquire(600000L) /* 10* 60* 1000L => 10 Minutes*/
-        }
     }
 
     fun invokeCall(accessToken: String, data: HashMap<String, String>) {
