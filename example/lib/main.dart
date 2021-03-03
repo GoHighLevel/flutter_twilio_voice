@@ -3,7 +3,10 @@ import 'package:flutter_twilio_voice/flutter_twilio_voice.dart';
 import 'package:flutter_twilio_voice/models/call.dart';
 
 void main() {
-  runApp(MaterialApp(home:MyApp(),title: 'Flutter Twilio Plugin',));
+  runApp(MaterialApp(
+    home: MyApp(),
+    title: 'Flutter Twilio Plugin',
+  ));
 }
 
 class MyApp extends StatefulWidget {
@@ -58,22 +61,46 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  bool speaker = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(),
       body: Column(
         children: [
-          Text(isConnected?'Connected':'Not connected'),
-          Text(isCalling?'Calling':'Not calling'),
-          Text(isRinging?'Ringing':'Not ringing'),
-          Text(onHold?'On hold':'Not on hold'),
-          Text(onSpeaker?'Speaker on':'Speaker off'),
-          Text(onMute?'Mute on':'Mute off'),
+          Text(isConnected ? 'Connected' : 'Not connected'),
+          Text(isCalling ? 'Calling' : 'Not calling'),
+          Text(isRinging ? 'Ringing' : 'Not ringing'),
+          Text(onHold ? 'On hold' : 'Not on hold'),
+          Text(onSpeaker ? 'Speaker on' : 'Speaker off'),
+          Text(onMute ? 'Mute on' : 'Mute off'),
+          IconButton(
+              icon: Icon(Icons.mic),
+              onPressed: () {
+                _toggleMute();
+              }),
+          IconButton(
+              icon: Icon(Icons.child_care_outlined),
+              onPressed: () {
+                _toggleHold();
+              }),
+          IconButton(
+              icon: Icon(Icons.mic),
+              onPressed: () {
+                _toggleSpeaker(speaker);
+                speaker = !speaker;
+              }),
+          IconButton(
+              icon: Icon(Icons.phone),
+              onPressed: () {
+                _disconnect();
+              }),
         ],
       ),
     );
   }
+
 
   void closeScreen(String message) {
     isConnected = false;
