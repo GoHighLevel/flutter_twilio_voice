@@ -17,12 +17,14 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import io.flutter.plugin.common.MethodChannel
 
-class TwilioManager(context: Context,
-                    activity: Activity,
-                    wakeLock: PowerManager.WakeLock,
-                    audioManager: AudioManager,
-                    notificationManager: NotificationManager,
-                    channel: MethodChannel) {
+class TwilioManager(
+    context: Context,
+    activity: Activity,
+    wakeLock: PowerManager.WakeLock,
+    audioManager: AudioManager,
+    notificationManager: NotificationManager,
+    channel: MethodChannel
+) {
 
     private val TAG = "VoiceActivity"
 
@@ -41,7 +43,12 @@ class TwilioManager(context: Context,
     init {
         createNotificationChannel()
         checkAndRequestPermission()
-        twilioAndroid = TwilioAndroid(_context, _wakeLock, _audioManager, channel, cancelNotification = { cancelNotification() })
+        twilioAndroid = TwilioAndroid(
+            _context,
+            _wakeLock,
+            _audioManager,
+            channel,
+            cancelNotification = { cancelNotification() })
 
     }
 
@@ -56,7 +63,8 @@ class TwilioManager(context: Context,
 
     fun cancelNotification() {
         if (isShowingNotification) {
-            val notificationManager: NotificationManagerCompat = NotificationManagerCompat.from(_context)
+            val notificationManager: NotificationManagerCompat =
+                NotificationManagerCompat.from(_context)
             notificationManager.cancel(notificationId)
             isShowingNotification = false
         }
@@ -66,13 +74,21 @@ class TwilioManager(context: Context,
     private fun checkAndRequestPermission() {
         val listPermissionNeeded: ArrayList<String> = ArrayList()
         for (perm in listPermissionNeeded) {
-            if (ContextCompat.checkSelfPermission(_context, perm) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(
+                    _context,
+                    perm
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
                 listPermissionNeeded.add(perm)
             }
         }
 
         if (!listPermissionNeeded.isEmpty()) {
-            ActivityCompat.requestPermissions(_activity, listPermissionNeeded.toTypedArray(), PERMISSION_REQUEST_CODE);
+            ActivityCompat.requestPermissions(
+                _activity,
+                listPermissionNeeded.toTypedArray(),
+                PERMISSION_REQUEST_CODE
+            );
         }
 
     }
@@ -82,7 +98,8 @@ class TwilioManager(context: Context,
     }
 
     fun checkPermissionForMicrophone(): Boolean {
-        val resultMic: Int = ContextCompat.checkSelfPermission(_context, Manifest.permission.RECORD_AUDIO)
+        val resultMic: Int =
+            ContextCompat.checkSelfPermission(_context, Manifest.permission.RECORD_AUDIO)
         return resultMic == PackageManager.PERMISSION_DENIED
     }
 
@@ -91,22 +108,23 @@ class TwilioManager(context: Context,
         intent.flags = Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT
         val pendingIntent: PendingIntent = PendingIntent.getActivity(_activity, 0, intent, 0)
         val builder: NotificationCompat.Builder = NotificationCompat.Builder(
-                _context, CHANNEL_ID
+            _context, CHANNEL_ID
         )
-                .setSmallIcon(getDrawableResourceId(context = _context, name = defaultIcon))
-                .setContentTitle(name)
-                .setContentText("Outbound call")
-                .setContentIntent(pendingIntent)
-                .setOngoing(true)
-                .setUsesChronometer(true)
-        val notificationManager: NotificationManagerCompat = NotificationManagerCompat.from(_context)
+            .setSmallIcon(getDrawableResourceId(context = _context, name = defaultIcon))
+            .setContentTitle(name)
+            .setContentText("Outbound call")
+            .setContentIntent(pendingIntent)
+            .setOngoing(true)
+            .setUsesChronometer(true)
+        val notificationManager: NotificationManagerCompat =
+            NotificationManagerCompat.from(_context)
         notificationManager.notify(notificationId, builder.build())
         isShowingNotification = true
-    }       
+    }
 
     fun startCall(name: String, accessToken: String, data: HashMap<String, String>) {
         buildCallNotification(name)
-        twilioAndroid.invokeCall(accessToken,data)
+        twilioAndroid.invokeCall(accessToken, data)
     }
 
     fun toggleHold(): Boolean {
@@ -128,5 +146,9 @@ class TwilioManager(context: Context,
 
     fun keyPress(digit: String) {
         twilioAndroid.keyPress(digit)
+    }
+
+    fun getStatus(): MutableMap<String, Any> {
+        return twilioAndroid.getStatus()
     }
 }

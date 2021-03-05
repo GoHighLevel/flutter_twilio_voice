@@ -8,10 +8,9 @@ import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Context.POWER_SERVICE
 import android.content.pm.PackageManager
 import android.media.AudioManager
-import android.os.Build
 import android.os.PowerManager
+import android.util.Log
 import androidx.annotation.NonNull
-import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -26,16 +25,16 @@ import io.flutter.plugin.common.PluginRegistry.Registrar
 public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
     private lateinit var channel: MethodChannel
-    private var _field = 0x00000020
     private lateinit var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
     private lateinit var twilioManager: TwilioManager
     private val PERMISSION_REQUEST_CODE = 1
     private lateinit var context: Context
 
     var appPermission = arrayOf(
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.CAMERA)
+        Manifest.permission.RECORD_AUDIO,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        Manifest.permission.CAMERA
+    )
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         this.flutterPluginBinding = flutterPluginBinding
@@ -55,22 +54,25 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
             instance.channel.setMethodCallHandler(instance)
             instance.initPlugin(registrar.activity())
             instance.context = registrar.activeContext()
-
         }
     }
 
     fun checkAndRequestPermission(activity: Activity) {
         val listPermissionNeeded: MutableList<String> = ArrayList()
         for (perm in appPermission) {
-            if (ContextCompat.checkSelfPermission(activity, perm) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(
+                    activity,
+                    perm
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
                 listPermissionNeeded.add(perm)
             }
         }
         if (listPermissionNeeded.isNotEmpty()) {
             ActivityCompat.requestPermissions(
-                    activity,
-                    listPermissionNeeded.toTypedArray(),
-                    PERMISSION_REQUEST_CODE
+                activity,
+                listPermissionNeeded.toTypedArray(),
+                PERMISSION_REQUEST_CODE
             )
         }
     }
@@ -79,12 +81,14 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         when (call.method) {
             "call" -> {
-                val isValid: Boolean = isValidDrawableResource(context, call.argument<String>("icon") as String)
+                val isValid: Boolean =
+                    isValidDrawableResource(context, call.argument<String>("icon") as String)
                 if (isValid)
                     twilioManager.defaultIcon = call.argument<String>("icon") as String
-                twilioManager.startCall(call.argument<String>("name") as String,
-                        call.argument<String>("accessToken") as String,
-                        call.argument<HashMap<String, String>>("data") as HashMap<String, String>
+                twilioManager.startCall(
+                    call.argument<String>("name") as String,
+                    call.argument<String>("accessToken") as String,
+                    call.argument<HashMap<String, String>>("data") as HashMap<String, String>
                 )
                 result.success(true)
 
@@ -106,6 +110,9 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
                 twilioManager.disconnectCall()
                 result.success(true)
             }
+            "getStatus" -> {
+                result.success(twilioManager.getStatus())
+            }
             else -> {
                 result.success(false)
             }
@@ -123,34 +130,47 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
 
     fun initPlugin(activity: Activity) {
         checkAndRequestPermission(activity)
-        twilioManager = TwilioManager(context = activity,
-                activity = activity,
-                audioManager = (activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager?)!!,
-                wakeLock = (activity.getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, activity.localClassName),
-                notificationManager = (activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager),
-                channel = channel
+        twilioManager = TwilioManager(
+            context = activity,
+            activity = activity,
+            audioManager = (activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager?)!!,
+            wakeLock = (activity.getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(
+                PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
+                activity.localClassName
+            ),
+            notificationManager = (activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager),
+            channel = channel
         )
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        Log.e("Flutter Twilio Plugin", "onAttachedToActivity")
+
         checkAndRequestPermission(binding.activity)
 
-        twilioManager = TwilioManager(context = binding.activity,
-                activity = binding.activity,
-                audioManager = (binding.activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager?)!!,
-                wakeLock = (binding.activity.getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, binding.activity.localClassName),
-                notificationManager = (binding.activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager),
-                channel = channel
+        twilioManager = TwilioManager(
+            context = binding.activity,
+            activity = binding.activity,
+            audioManager = (binding.activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager?)!!,
+            wakeLock = (binding.activity.getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(
+                PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
+                binding.activity.localClassName
+            ),
+            notificationManager = (binding.activity.getSystemService(NOTIFICATION_SERVICE) as NotificationManager),
+            channel = channel
         )
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
+        Log.e("Flutter Twilio Plugin", "onDetachedFromActivityForConfigChanges")
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+        Log.e("Flutter Twilio Plugin", "onReattachedToActivityForConfigChanges")
     }
 
     override fun onDetachedFromActivity() {
+        Log.e("Flutter Twilio Plugin", "onDetachedFromActivity")
     }
 
 

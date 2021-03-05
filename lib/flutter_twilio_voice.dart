@@ -172,4 +172,10 @@ class FlutterTwilioVoice {
       }
     });
   }
+
+  void getStatus() {
+    _channel.invokeMethod('getStatus').then((result) {
+      print(result);
+    });
+  }
 }

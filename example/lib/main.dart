@@ -96,11 +96,15 @@ class _MyAppState extends State<MyApp> {
               onPressed: () {
                 _disconnect();
               }),
+          IconButton(
+              icon: Icon(Icons.cancel),
+              onPressed: () {
+                twilioVoice.getStatus();
+              }),
         ],
       ),
     );
   }
-
 
   void closeScreen(String message) {
     isConnected = false;
