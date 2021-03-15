@@ -39,7 +39,6 @@ class TwilioManager(
     private val _activity: Activity = activity
     private var twilioAndroid: TwilioAndroid
     lateinit var defaultIcon: String
-
     init {
         createNotificationChannel()
         checkAndRequestPermission()
@@ -139,9 +138,10 @@ class TwilioManager(
         return twilioAndroid.mute()
     }
 
-    fun disconnectCall() {
-        twilioAndroid.disconnect()
+    fun disconnectCall():Boolean {
+       val result:Boolean= twilioAndroid.disconnect()
         _audioManager.mode = AudioManager.MODE_NORMAL
+        return result;
     }
 
     fun keyPress(digit: String) {

@@ -182,11 +182,13 @@ class TwilioAndroid(
 
     }
 
-    fun disconnect() {
+    fun disconnect():Boolean {
         if (activeCall != null) {
             activeCall!!.disconnect()
             activeCall = null
+            return true
         }
+        return false
     }
 
     fun hold(): Boolean {
@@ -234,8 +236,6 @@ class TwilioAndroid(
             "isDisconnected" to isDisConnected,
             "isReconnecting" to isReconnecting,
             "isReconnected" to isReconnected
-
-
         )
     }
 }

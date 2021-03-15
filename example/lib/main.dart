@@ -69,6 +69,13 @@ class _MyAppState extends State<MyApp> {
       appBar: AppBar(),
       body: Column(
         children: [
+          RaisedButton(
+            onPressed: () {
+              _fetchButtonStates();
+              _makeCall();
+            },
+            child: Text('Start call'),
+          ),
           Text(isConnected ? 'Connected' : 'Not connected'),
           Text(isCalling ? 'Calling' : 'Not calling'),
           Text(isRinging ? 'Ringing' : 'Not ringing'),
