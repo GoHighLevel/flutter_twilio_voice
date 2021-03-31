@@ -99,6 +99,50 @@ class FlutterTwilioVoice {
 
     return completer.future;
   }
+  Future<bool> getMuteStatus() async {
+    Completer<bool> completer = Completer();
+    _channel
+        .invokeMethod(MethodChannelMethods.MUTE_STATUS)
+        .then((result) => completer.complete(result))
+        .catchError((Object e) {
+      if (e is PlatformException)
+        throw TwilioCallException(error: e.message);
+      else
+        throw e;
+    });
+
+    return completer.future;
+  }
+
+  Future<bool> getHoldStatus() async {
+    Completer<bool> completer = Completer();
+    _channel
+        .invokeMethod(MethodChannelMethods.HOLD_STATUS)
+        .then((result) => completer.complete(result))
+        .catchError((Object e) {
+      if (e is PlatformException)
+        throw TwilioCallException(error: e.message);
+      else
+        throw e;
+    });
+
+    return completer.future;
+  }
+
+  Future<bool> getSpeakerStatus() async {
+    Completer<bool> completer = Completer();
+    _channel
+        .invokeMethod(MethodChannelMethods.SPEAKER_STATUS)
+        .then((result) => completer.complete(result))
+        .catchError((Object e) {
+      if (e is PlatformException)
+        throw TwilioCallException(error: e.message);
+      else
+        throw e;
+    });
+
+    return completer.future;
+  }
 
   Future<void> pressKey({@required String keyValue}) {
     Completer<void> completer = Completer();
