@@ -121,6 +121,18 @@ class TwilioManager(context: Context,
         return twilioAndroid.mute()
     }
 
+    fun getHoldStatus(): Boolean {
+        return twilioAndroid.holdStatus()
+    }
+
+    fun getSpeakerStatus(): Boolean {
+        return twilioAndroid.speakerStatus()
+    }
+
+    fun getMuteStatus(): Boolean {
+        return twilioAndroid.muteStatus()
+    }
+
     fun disconnectCall() {
         twilioAndroid.disconnect()
         _audioManager.mode = AudioManager.MODE_NORMAL

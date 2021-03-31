@@ -98,6 +98,15 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
             "mute" -> {
                 result.success(twilioManager.toggleMute())
             }
+            "mute_status" ->{
+                result.success(twilioManager.getMuteStatus())
+            }
+            "hold_status" ->{
+                result.success(twilioManager.getHoldStatus())
+            }
+            "speaker_status" ->{
+                result.success(twilioManager.getSpeakerStatus())
+            }
             "keyPress" -> {
                 twilioManager.keyPress(call.argument<String>("digit") as String)
                 result.success(true)
