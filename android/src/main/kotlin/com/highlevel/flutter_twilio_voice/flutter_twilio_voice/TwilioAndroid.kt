@@ -176,11 +176,15 @@ class TwilioAndroid(
 
 
     fun holdStatus(): Boolean {
-        return activeCall!!.isOnHold
+        return if (activeCall != null)
+            activeCall!!.isOnHold
+        else false
     }
 
     fun muteStatus(): Boolean {
-        return activeCall!!.isMuted
+        return if (activeCall != null)
+            activeCall!!.isMuted
+        else false
     }
 
     fun speakerStatus(): Boolean {

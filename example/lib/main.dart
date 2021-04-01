@@ -132,6 +132,30 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  void _holdStatus() async {
+    var result = await twilioVoice.getHoldStatus();
+    print("hold $result");
+    setState(() {
+      onHold = result;
+    });
+  }
+
+  void _muteStatus() async {
+    var result = await twilioVoice.getMuteStatus();
+    print("mute $result");
+    setState(() {
+      onMute = result;
+    });
+  }
+
+  void _speakerStatus() async {
+    var result = await twilioVoice.getSpeakerStatus();
+    print("speaker $result");
+    setState(() {
+      onSpeaker = result;
+    });
+  }
+
   void _disconnect() {
     twilioVoice.disconnectCall();
   }
@@ -146,5 +170,8 @@ class _MyAppState extends State<MyApp> {
     _toggleMute();
     _toggleHold();
     _toggleSpeaker(false);
+    _holdStatus();
+    _muteStatus();
+    _speakerStatus();
   }
 }
