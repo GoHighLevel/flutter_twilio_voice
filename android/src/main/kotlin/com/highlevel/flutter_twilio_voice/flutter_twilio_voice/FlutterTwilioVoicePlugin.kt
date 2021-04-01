@@ -160,6 +160,7 @@ public class FlutterTwilioVoicePlugin : FlutterPlugin, MethodCallHandler, Activi
     }
 
     override fun onDetachedFromActivity() {
+        twilioManager.disconnectCall()
     }
 
 
