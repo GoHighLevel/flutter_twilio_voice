@@ -43,9 +43,15 @@ class TwilioAndroid(
                     callException.message
                 )
                 cancelNotification()
+                val callSid: String? = call.sid
                 val args = HashMap<String, String>()
                 args.put("status", "connect_failure")
                 args.put("message", message)
+                if (callSid != null)
+                    args.put("sid", callSid)
+                else
+                    args.put("sid","UNKNOWN")
+
                 _channel.invokeMethod("call_listener", args)
                 _audioManager.mode = AudioManager.MODE_NORMAL
             }
