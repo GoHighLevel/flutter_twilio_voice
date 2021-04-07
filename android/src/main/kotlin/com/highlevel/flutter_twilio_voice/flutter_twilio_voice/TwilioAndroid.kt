@@ -46,6 +46,7 @@ class TwilioAndroid(
                 val args = HashMap<String, String>()
                 args.put("status", "connect_failure")
                 args.put("message", message)
+                args.put("sid", call.sid)
                 _channel.invokeMethod("call_listener", args)
                 _audioManager.mode = AudioManager.MODE_NORMAL
             }
